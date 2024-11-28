@@ -1,12 +1,23 @@
 using System.Net.WebSockets;
 
+using Microsoft.AspNetCore.Server.Kestrel.Core;
+
 var builder = WebApplication.CreateBuilder(args);
+
+// Configure Kestrel to use HTTP/2
+builder.WebHost.ConfigureKestrel(options => {
+    options.ListenAnyIP(5001, listenOptions => {
+        listenOptions.Protocols = HttpProtocols.Http2;
+        listenOptions.UseHttps(); // Ensure HTTPS is used
+    });
+});
+
 var app = builder.Build();
 
 app.UseWebSockets();
 app.UseHttpsRedirection();
-app.UseStaticFiles();
 app.UseDefaultFiles();
+app.UseStaticFiles();
 
 app.Map("/ws", async (HttpContext context) => {
     if (context.WebSockets.IsWebSocketRequest) {
